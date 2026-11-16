@@ -1,0 +1,34 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="azrieselman"
+description='''
+Lets Visual Workbench's 3D crafting layer apply to every block whose name contains "crafting table".
+'''
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="visualworkbench"
+type="required"
+versionRange="[21.1.0,)"
+ordering="AFTER"
+side="BOTH"
+reason="Visual Workbench wraps crafting tables and draws the 3D crafting layer."

@@ -1,0 +1,112 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+base {
+    archivesName = 'workbench-wood'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    maven {
+        name = 'Fuzs'
+        url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/'
+        content {
+            includeGroup 'fuzs.puzzleslib'
+            includeGroup 'fuzs.forgeconfigapiport'
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter { includeGroup 'maven.modrinth' }
+    }
+}
+
+neoForge {
+    version = project.neo_version
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'maven.modrinth:visual-workbench:21.1.2'
+    compileOnly 'fuzs.puzzleslib:puzzleslib-common:21.1.58'
+    compileOnly 'fuzs.puzzleslib:puzzleslib-neoforge:21.1.58'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+}
+
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('exportJar', Copy) {
+    dependsOn tasks.named('jar')
+    from layout.buildDirectory.dir('libs')
+    include '*.jar'
+    exclude '*-sources.jar', '*-javadoc.jar'
+    into layout.projectDirectory
+    rename { 'workbench-wood.jar' }
+}
+
+tasks.named('build').configure {
+    finalizedBy tasks.named('exportJar')
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
